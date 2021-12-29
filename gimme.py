@@ -179,7 +179,7 @@ TEXT_SPEED = 3
 SCORE_FONT = pygame.font.SysFont('comicsans', 30, bold=True)
 
 # LOAD IMAGES
-logo = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'Screenshot (1).png')), (200, 200))
+logo = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'logo.png')), (200, 200))
 logo.set_alpha(255)
 
 # OBJECTS

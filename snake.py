@@ -7,7 +7,7 @@ pygame.init()
 
 class Head():
     def __init__(self):
-        self.x, self.y = (225, 400)
+        self.x, self.y = (NUM_BLOCKS*TILE_WIDTH/2, NUM_BLOCKS*TILE_WIDTH)
         self.dir = 'y-'
     
     def move(self):
@@ -74,6 +74,13 @@ GREY = (235, 235, 235)
 SCORE_FONT = font.SysFont('', 50)
 
 # FUNCTIONS
+def reset():
+    global segments
+    segments = []
+    head.x = 10* TILE_WIDTH
+    head.y = 18* TILE_WIDTH
+    head.dir = 'y-'
+
 def check_loss():
     if (head.x, head.y) not in coords:
         return True
@@ -96,9 +103,15 @@ def handle_food():
             item.new(segments)
 
 def draw_snake(head, segments):
-    pygame.draw.rect(WIN, HEAD_COLOR, (head.x+TILE_PADDING, head.y+TILE_PADDING, TILE_WIDTH-2*TILE_PADDING, TILE_WIDTH-2*TILE_PADDING))
+    if play:
+        pygame.draw.rect(WIN, HEAD_COLOR, (head.x+TILE_PADDING, head.y+TILE_PADDING, TILE_WIDTH-2*TILE_PADDING, TILE_WIDTH-2*TILE_PADDING))
+    else:
+        pygame.draw.rect(WIN, RED, (head.x+TILE_PADDING, head.y+TILE_PADDING, TILE_WIDTH-2*TILE_PADDING, TILE_WIDTH-2*TILE_PADDING))
     for segment in segments:
-        pygame.draw.rect(WIN, segment.color, (segment.x+TILE_PADDING, segment.y+TILE_PADDING, TILE_WIDTH-2*TILE_PADDING, TILE_WIDTH-2*TILE_PADDING))
+        if play:
+            pygame.draw.rect(WIN, segment.color, (segment.x+TILE_PADDING, segment.y+TILE_PADDING, TILE_WIDTH-2*TILE_PADDING, TILE_WIDTH-2*TILE_PADDING))
+        else:
+            pygame.draw.rect(WIN, RED, (segment.x+TILE_PADDING, segment.y+TILE_PADDING, TILE_WIDTH-2*TILE_PADDING, TILE_WIDTH-2*TILE_PADDING))
 
 def handle_snake(head, segments):
     for i in range(len(segments)-1, -1, -1):
@@ -132,22 +145,25 @@ def draw_back(WIN, head, segments):
 # OBJECTS
 segments = []
 head = Head()
-food1, food2, food3 = (Food(), Food(), Food())
+food1, food2, food3, food4 = (Food(), Food(), Food(), Food())
 food1.new(segments)
 food2.new(segments)
 food3.new(segments)
-food = [food1, food2, food3]
+food4.new(segments)
+food = [food1, food2, food3, food4]
 score = Score()
 
 # MAIN LOOP
 WIN = create_win()
 run = True
 clock = pygame.time.Clock()
+play = True
 
 while run:
     clock.tick(FPS)
-    handle_snake(head, segments)
-    handle_food()
+    if play:
+        handle_snake(head, segments)
+        handle_food()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
@@ -162,7 +178,7 @@ while run:
                 head.dir = 'x+'
     draw_back(WIN, head, segments)
     if check_loss():
-        run = False
+        reset()
     time.sleep(0.12)
 
 pygame.quit()

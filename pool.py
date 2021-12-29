@@ -161,17 +161,17 @@ class Path:
             pygame.draw.line(WIN, PATH_COLOR, (x, y), (cueBall.x, cueBall.y), 3)
 
 # CONSTANTS
-WIDTH, HEIGHT = (1300, 800)
+WIDTH, HEIGHT = (1000, 600)
 FPS = 60
 
-BALL_RADIUS = 12
+BALL_RADIUS = 10
 CUE_DISTANCE = 30
 CUE_LIGHT_LENGTH = 300
 CUE_DARK_LENGTH = 700
 CUE_WIDTH = 7
 CUE_VELOCITY = 0.1
 FRICTION = 0.03
-POCKET_RADIUS = 25
+POCKET_RADIUS = 20
 PATH_LINE_LENGTH = WIDTH
 
 BORDER_THICKNESS = 40
@@ -220,11 +220,11 @@ def draw_back(WIN, pos):
     pygame.draw.rect(WIN, TABLE_BROWN, (FLOOR_THICKNESS+BORDER_THICKNESS, FLOOR_THICKNESS, WIDTH - 2*BORDER_THICKNESS - 2*FLOOR_THICKNESS, BORDER_THICKNESS))
     pygame.draw.rect(WIN, TABLE_BROWN, (WIDTH-FLOOR_THICKNESS-2*BORDER_THICKNESS, FLOOR_THICKNESS, BORDER_THICKNESS, HEIGHT- 2*FLOOR_THICKNESS))
     pygame.draw.rect(WIN, TABLE_BROWN, (FLOOR_THICKNESS + BORDER_THICKNESS, HEIGHT-FLOOR_THICKNESS-BORDER_THICKNESS, WIDTH - 2*BORDER_THICKNESS - 2*FLOOR_THICKNESS, BORDER_THICKNESS))
-    pygame.draw.rect(WIN, FLOOR_GREY, (0, 0, WIDTH, FLOOR_THICKNESS))
-    pygame.draw.rect(WIN, FLOOR_GREY, (0, 0, FLOOR_THICKNESS + BORDER_THICKNESS, HEIGHT))
-    pygame.draw.rect(WIN, FLOOR_GREY, (WIDTH-FLOOR_THICKNESS-BORDER_THICKNESS, 0, FLOOR_THICKNESS + BORDER_THICKNESS, HEIGHT))
-    pygame.draw.rect(WIN, FLOOR_GREY, (0, HEIGHT-FLOOR_THICKNESS, WIDTH, FLOOR_THICKNESS))
-    pygame.draw.circle(WIN, BLACK, (WIDTH/4, HEIGHT/2), 5)
+    pygame.draw.rect(WIN, (0, 255, 255), (0, 0, WIDTH, FLOOR_THICKNESS))
+    pygame.draw.rect(WIN, (0, 255, 255), (0, 0, FLOOR_THICKNESS + BORDER_THICKNESS, HEIGHT))
+    pygame.draw.rect(WIN, (0, 255, 255), (WIDTH-FLOOR_THICKNESS-BORDER_THICKNESS, 0, FLOOR_THICKNESS + BORDER_THICKNESS, HEIGHT))
+    pygame.draw.rect(WIN, (0, 255, 255), (0, HEIGHT-FLOOR_THICKNESS, WIDTH, FLOOR_THICKNESS))
+    pygame.draw.circle(WIN, BLACK, (WIDTH/4, HEIGHT/2), 2)
     for pocket in pockets:
         pocket.draw()
     if not shoot:
@@ -263,7 +263,7 @@ def handle_cueball():
 def handle_pockets():
     for ball in balls:
         for pocket in pockets:
-            if math.sqrt((ball.x - pocket.x)**2 + (ball.y - pocket.y)**2) <= POCKET_RADIUS:
+            if math.sqrt((ball.x - pocket.x)**2 + (ball.y - pocket.y)**2) <= POCKET_RADIUS +5:
                 ball.x, ball.y = (WIDTH/4, HEIGHT/2)
                 shoot = False
                 init = False
