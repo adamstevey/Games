@@ -32,7 +32,15 @@ class Target(object):
             return True
 
 class Score(object):
-    pass
+    def __init__(self):
+        self.score = 0
+
+    def increase(self):
+        self.score += 1
+    
+    def draw(self):
+        score = font.render(str(self.score), 1, WHITE)
+        WIN.blit(score, (0, 0))
 
 # CONSTANTS
 WHITE = (255, 255, 255)
@@ -47,15 +55,19 @@ PRESSED_COLOR = BLUE
 WIDTH = 900
 HEIGHT = 500
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Target Practice")
 
 TARGET_RADIUS = 75
 RING_WIDTH = 5
 SPEED = 0.3
-ACCELERATION = 0.02
+ACCELERATION = 0.0175
 PRESSED_SPEED = 1
+
+font = pygame.font.SysFont("Comicsans", 50)
 
 # OBJECTS
 targets = [Target(SPEED, TARGET_RADIUS)]
+score = Score()
 
 # FUNCTIONS
 
@@ -66,6 +78,7 @@ def handle_target_clicks(pos):
             target.pressed = True
             SPEED += ACCELERATION
             targets.append(Target(SPEED, TARGET_RADIUS))
+            score.increase()
 
 def draw_targets():
     for target in targets:
@@ -81,6 +94,7 @@ def shrink_targets():
 def draw_back():
     WIN.fill(BACKGROUND_COLOR)
     draw_targets()
+    score.draw()
     pygame.display.update()
 
 def main():
