@@ -1,3 +1,4 @@
+import enum
 import pygame
 import random
 import neat
@@ -15,7 +16,24 @@ BALL_YVEL = -4
 
 WHITE = (255, 255, 255)
 PURPLE = (255, 0, 255)
+BLUE = (0, 0, 255)
+LIME = (0, 255, 0)
+RED = (255, 0, 0)
+GREY = (150, 150, 150)
+YELLOW = (255, 235, 42)
+ORANGE = (237, 135, 45)
+DARKBLUE = (17, 30, 108)
 BLACK = (0, 0, 0)
+BROWN = (155, 104, 60)
+DARKGREEN = (1, 50, 32)
+MAROON = (128, 0, 0)
+TURQUOISE = (64, 224, 208)
+DARKPURPLE = (75, 0, 130)
+PINK = (255, 192, 203)
+HOTPINK = (255, 53, 184)
+
+colors = [WHITE, PURPLE, BLUE, LIME, RED, GREY, YELLOW, ORANGE, DARKBLUE, BLACK, BROWN, DARKGREEN, MAROON, TURQUOISE, DARKPURPLE, PINK, HOTPINK]
+
 BACKGROUND_COLOR = (215, 181, 216)
 
 #CLASSES
@@ -32,11 +50,11 @@ class Ball:
         self.x = x
         self.y = BALL_Y
         self.yvel = BALL_YVEL
-        self.xvel = random.choice([random.randint(-3, -2), random.randint(2, 3)])
+        self.xvel = random.choice([random.uniform(-3, -2), random.uniform(2, 3)])
 
     
-    def draw(self, WIN):
-        pygame.draw.rect(WIN, PURPLE, (self.x, self.y, BALL_WIDTH, BALL_WIDTH))
+    def draw(self, WIN, color):
+        pygame.draw.rect(WIN, color, (self.x, self.y, BALL_WIDTH, BALL_WIDTH))
     
     def move(self, paddle):
         global obstacles
@@ -76,40 +94,47 @@ class Ball:
 class Paddle:
     def __init__(self, x):
         self.x = x
-        self.vel = 5
+        self.vel = 15
     
-    def draw(self, WIN):
-        pygame.draw.rect(WIN, PURPLE, (self.x, PADDLE_Y, PADDLE_WIDTH, PADDLE_HEIGHT))
+    def draw(self, WIN, color):
+        pygame.draw.rect(WIN, color, (self.x, PADDLE_Y, PADDLE_WIDTH, PADDLE_HEIGHT))
 
-class Genome:
-    def __init__(self, ball, paddle):
-        pass
+    def move_left(self):
+        if self.x > 10:
+            self.x -= self.vel
+
+    def move_right(self):
+        if self.x < WIDTH - PADDLE_WIDTH - 10:
+            self.x += self.vel
+
+class Grouping:
+    def __init__(self, ball, paddle, color):
+        self.ball = ball
+        self.paddle = paddle
+        self.color = color
 
 #FUNCTIONS
+def handle_fitness():
+    global paddles, ge
+    for x, paddle in enumerate(paddles):
+        if paddle.ball.x + BALL_WIDTH > paddle.paddle.x:
+            if paddle.ball.x < paddle.paddle.x + PADDLE_WIDTH:
+                ge[x].fitness += 0.2
+
 def new_obstacle(height):
     global obstacles
     obstacles.append(Obstacle(random.randint(10, WIDTH - PADDLE_WIDTH - 10), height))
 
-def handle_keys(paddle):
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_a]:
-        if paddle.x > 10:
-            paddle.x -= paddle.vel
-    elif keys[pygame.K_d]:
-        if paddle.x + PADDLE_WIDTH < WIDTH - 10:
-            paddle.x += paddle.vel
-
-def drawWindow(WIN, paddle, ball, obstacles):
+def drawWindow(WIN, paddles, obstacles):
     WIN.fill(BACKGROUND_COLOR)
-    paddle.draw(WIN)
-    ball.draw(WIN)
+    for paddle in paddles:
+        paddle.paddle.draw(WIN, paddle.color)
+        paddle.ball.draw(WIN, paddle.color)
     for obstacle in obstacles:
         obstacle.draw(WIN)
     pygame.display.update()
 
 # OBJECTS
-paddle = Paddle(100)
-ball = Ball(300)
 obstacles = []
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 run = True
@@ -120,11 +145,25 @@ for _ in range(3):
     new_obstacle(height)
     height += 75
 
-def main():
-    global paddle, ball, obstacles, WIN, run, clock
+ge = []
+nets = []
+paddles = []
+
+def main(genomes, config):
+    global obstacles, WIN, run, clock, ge, nets, paddles
+
+    for x, (_, g) in enumerate(genomes):
+        net = neat.nn.FeedForwardNetwork.create(g, config)
+        nets.append(net)
+        paddles.append(Grouping(Ball(250), Paddle(200), colors[x]))
+        g.fitness = 0
+        ge.append(g)
 
     while run:
         clock.tick(60)
+
+        if len(paddles) < 1:
+            break
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -132,8 +171,40 @@ def main():
                 pygame.quit()
                 quit()
 
-        handle_keys(paddle)
-        drawWindow(WIN, paddle, ball, obstacles)
-        ball.move(paddle)
+        drawWindow(WIN, paddles, obstacles)
+        for paddle in paddles:
+            paddle.ball.move(paddle.paddle)
+        
+        for x, paddle in enumerate(paddles):
 
-main()
+            output = nets[x].activate((paddles[x].paddle.x, paddles[x].ball.x))
+
+            if output[0] > 0.66:
+                paddles[x].paddle.move_left() # move left
+            if output[0] < 0.33:
+                paddles[x].paddle.move_right() # move right
+
+            if paddle.ball.y + BALL_WIDTH >= HEIGHT:
+                paddles.pop(x)
+                nets.pop(x)
+                ge.pop(x)
+    
+        handle_fitness()
+            
+
+def run(config_path):
+    config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction, 
+    neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
+
+    pop = neat.Population(config)
+
+    pop.add_reporter(neat.StdOutReporter(True))
+    stats = neat.StatisticsReporter()
+    pop.add_reporter(stats)
+
+    pop.run(main, 50)
+
+if __name__ == "__main__":
+    local_dir = os.path.dirname(__file__)
+    config_path = os.path.join(local_dir, "config-feedforward.txt")
+    run(config_path)
