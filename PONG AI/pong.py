@@ -31,10 +31,9 @@ TURQUOISE = (64, 224, 208)
 DARKPURPLE = (75, 0, 130)
 PINK = (255, 192, 203)
 HOTPINK = (255, 53, 184)
+LIGHTPURPLE = (215, 181, 216)
 
-colors = [WHITE, PURPLE, BLUE, LIME, RED, GREY, YELLOW, ORANGE, DARKBLUE, BLACK, BROWN, DARKGREEN, MAROON, TURQUOISE, DARKPURPLE, PINK, HOTPINK]
-
-BACKGROUND_COLOR = (215, 181, 216)
+colors = [WHITE, PURPLE, BLUE, LIME, RED, GREY, YELLOW, ORANGE, DARKBLUE, LIGHTPURPLE, BROWN, DARKGREEN, MAROON, TURQUOISE, DARKPURPLE, PINK, HOTPINK]
 
 #CLASSES
 class Obstacle:
@@ -79,8 +78,8 @@ class Ball:
             if self.y + BALL_WIDTH >= PADDLE_Y and self.y <= PADDLE_Y + PADDLE_HEIGHT:
                 self.yvel *= -1
                 self.y = PADDLE_Y - BALL_WIDTH - 1
-                self.yvel *= 1.04
-                self.xvel *= 1.04
+                self.yvel *= 1.06
+                self.xvel *= 1.06
         
         #OBSTACLE COLLISIONS
         for obstacle in obstacles:
@@ -94,7 +93,7 @@ class Ball:
 class Paddle:
     def __init__(self, x):
         self.x = x
-        self.vel = 15
+        self.vel = 10
     
     def draw(self, WIN, color):
         pygame.draw.rect(WIN, color, (self.x, PADDLE_Y, PADDLE_WIDTH, PADDLE_HEIGHT))
@@ -112,6 +111,9 @@ class Grouping:
         self.ball = ball
         self.paddle = paddle
         self.color = color
+    
+    def update_speed(self):
+        self.paddle.vel = abs(self.ball.xvel)
 
 #FUNCTIONS
 def handle_fitness():
@@ -126,7 +128,7 @@ def new_obstacle(height):
     obstacles.append(Obstacle(random.randint(10, WIDTH - PADDLE_WIDTH - 10), height))
 
 def drawWindow(WIN, paddles, obstacles):
-    WIN.fill(BACKGROUND_COLOR)
+    WIN.fill(BLACK)
     for paddle in paddles:
         paddle.paddle.draw(WIN, paddle.color)
         paddle.ball.draw(WIN, paddle.color)
@@ -188,6 +190,9 @@ def main(genomes, config):
                 paddles.pop(x)
                 nets.pop(x)
                 ge.pop(x)
+        
+        for paddle in paddles:
+            paddle.update_speed()
     
         handle_fitness()
             
