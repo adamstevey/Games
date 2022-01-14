@@ -1,18 +1,20 @@
-import enum
 import pygame
 import random
 import neat
 import os
 
+pygame.font.init()
 
 #CONSTANTS
-WIDTH, HEIGHT = (500, 700)
+WIDTH, HEIGHT = (400, 700)
 BALL_Y = 550
 PADDLE_HEIGHT = 10
 PADDLE_WIDTH = 100
 PADDLE_Y = 670
 BALL_WIDTH = 25
 BALL_YVEL = -4
+
+STAT_FONT = pygame.font.SysFont("comicsans", 30)
 
 WHITE = (255, 255, 255)
 PURPLE = (255, 0, 255)
@@ -78,8 +80,10 @@ class Ball:
             if self.y + BALL_WIDTH >= PADDLE_Y and self.y <= PADDLE_Y + PADDLE_HEIGHT:
                 self.yvel *= -1
                 self.y = PADDLE_Y - BALL_WIDTH - 1
-                self.yvel *= 1.06
-                self.xvel *= 1.06
+                if abs(self.yvel) < 30:
+                    self.yvel *= 1.04
+                if abs(self.xvel) < 23:
+                    self.xvel *= 1.04
         
         #OBSTACLE COLLISIONS
         for obstacle in obstacles:
@@ -127,8 +131,10 @@ def new_obstacle(height):
     global obstacles
     obstacles.append(Obstacle(random.randint(10, WIDTH - PADDLE_WIDTH - 10), height))
 
-def drawWindow(WIN, paddles, obstacles):
+def drawWindow(WIN, paddles, obstacles, generation):
     WIN.fill(BLACK)
+    gen = STAT_FONT.render("Generation: " + str(generation), 1, WHITE)
+    WIN.blit(gen, (0, 0))
     for paddle in paddles:
         paddle.paddle.draw(WIN, paddle.color)
         paddle.ball.draw(WIN, paddle.color)
@@ -143,16 +149,20 @@ run = True
 clock = pygame.time.Clock()
 
 height = 75
-for _ in range(3):
+for _ in range(4):
     new_obstacle(height)
-    height += 75
+    height += 50
 
 ge = []
 nets = []
 paddles = []
 
+generation = 0
+
 def main(genomes, config):
-    global obstacles, WIN, run, clock, ge, nets, paddles
+    global obstacles, WIN, run, clock, ge, nets, paddles, generation
+
+    generation += 1
 
     for x, (_, g) in enumerate(genomes):
         net = neat.nn.FeedForwardNetwork.create(g, config)
@@ -173,7 +183,7 @@ def main(genomes, config):
                 pygame.quit()
                 quit()
 
-        drawWindow(WIN, paddles, obstacles)
+        drawWindow(WIN, paddles, obstacles, generation)
         for paddle in paddles:
             paddle.ball.move(paddle.paddle)
         
@@ -207,7 +217,7 @@ def run(config_path):
     stats = neat.StatisticsReporter()
     pop.add_reporter(stats)
 
-    pop.run(main, 50)
+    print(pop.run(main, 50))
 
 if __name__ == "__main__":
     local_dir = os.path.dirname(__file__)
